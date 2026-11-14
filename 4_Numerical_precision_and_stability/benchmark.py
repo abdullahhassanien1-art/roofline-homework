@@ -1,3 +1,4 @@
+import csv
 import time
 import numpy as np
 
@@ -37,14 +38,23 @@ def measure_matmul(N, dtype):
     return t, flops / t / 1e9, nbytes / t / 1e9
 
 
+rows = []
+
 for dtype in [np.float32, np.float64]:
     for N in [256, 512, 1024, 2048, 4096, 8192]:
         t, gflops, gbs = measure_matvec(N, dtype)
-        print(f"matvec {np.dtype(dtype).name}  N={N:5d}  "
-              f"time={t*1000:8.3f} ms  {gflops:6.2f} GFLOP/s  {gbs:6.2f} GB/s")
+        rows.append(["matvec", np.dtype(dtype).name, N, t, gflops, gbs])
+        print(rows[-1])
 
 for dtype in [np.float32, np.float64]:
     for N in [128, 256, 512, 1024, 2048, 4096]:
         t, gflops, gbs = measure_matmul(N, dtype)
-        print(f"matmul {np.dtype(dtype).name}  N={N:5d}  "
-              f"time={t*1000:8.3f} ms  {gflops:6.2f} GFLOP/s  {gbs:6.2f} GB/s")
+        rows.append(["matmul", np.dtype(dtype).name, N, t, gflops, gbs])
+        print(rows[-1])
+
+with open("results.csv", "w", newline="") as f:
+    writer = csv.writer(f)
+    writer.writerow(["op", "dtype", "N", "time_s", "gflops", "gbs"])
+    writer.writerows(rows)
+
+print("Saved results.csv")
