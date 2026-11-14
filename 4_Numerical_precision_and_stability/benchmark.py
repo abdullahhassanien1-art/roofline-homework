@@ -13,11 +13,6 @@ def time_it(func, repeats=7):
     return min(times)   # fastest run
 
 
-N = 2000
-A = np.full((N, N), 1.0)
-x = np.full(N, 3.0)
-y = np.empty(N)          # empty box for the answer, made BEFORE timing
-
 def measure_matvec(N, dtype):
     A = np.full((N, N), 1.0, dtype=dtype)
     x = np.full(N, 3.0, dtype=dtype)
@@ -30,8 +25,26 @@ def measure_matvec(N, dtype):
     return t, flops / t / 1e9, nbytes / t / 1e9
 
 
+def measure_matmul(N, dtype):
+    A = np.full((N, N), 1.0, dtype=dtype)
+    B = np.full((N, N), 2.0, dtype=dtype)
+    C = np.empty((N, N), dtype=dtype)
+
+    t = time_it(lambda: np.matmul(A, B, out=C))
+
+    flops = 2 * N**3
+    nbytes = 3 * N**2 * A.itemsize
+    return t, flops / t / 1e9, nbytes / t / 1e9
+
+
 for dtype in [np.float32, np.float64]:
     for N in [256, 512, 1024, 2048, 4096, 8192]:
         t, gflops, gbs = measure_matvec(N, dtype)
         print(f"matvec {np.dtype(dtype).name}  N={N:5d}  "
+              f"time={t*1000:8.3f} ms  {gflops:6.2f} GFLOP/s  {gbs:6.2f} GB/s")
+
+for dtype in [np.float32, np.float64]:
+    for N in [128, 256, 512, 1024, 2048, 4096]:
+        t, gflops, gbs = measure_matmul(N, dtype)
+        print(f"matmul {np.dtype(dtype).name}  N={N:5d}  "
               f"time={t*1000:8.3f} ms  {gflops:6.2f} GFLOP/s  {gbs:6.2f} GB/s")
